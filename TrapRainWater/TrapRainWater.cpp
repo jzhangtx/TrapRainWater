@@ -4,36 +4,64 @@
 #include <iostream>
 #include <vector>
 
-size_t FindNextTrapper(const std::vector<int>& heights, size_t begin)
+size_t GetNextHighest(const std::vector<int>& heights, size_t begin)
 {
     int height = heights[begin++];
-    for (; begin < heights.size(); ++begin)
+    bool hasOne = false;
+    while (begin != heights.size() && height < heights[begin])
     {
-        if (heights[begin] >= height)
-            return begin;
+        hasOne = true;
+        height = heights[begin++];
     }
 
-    return heights.size();
+    if (!hasOne && begin == heights.size())
+        return begin;
+
+    return begin - 1;
+}
+
+size_t GetNextLowest(const std::vector<int>& heights, size_t begin)
+{
+    int height = heights[begin++];
+    bool hasOne = false;
+    while (begin != heights.size() && height >= heights[begin])
+    {
+        hasOne = true;
+        height = heights[begin++];
+    }
+
+    if (!hasOne && begin == heights.size())
+        return begin;
+
+    return begin - 1;
 }
 
 int VolumeOfTrappedRainWater(const std::vector<int>& heights)
 {
+    size_t endHeight = 0;
+    size_t startHeight = 0;
     int volume = 0;
-    for (size_t i = 0; i < heights.size(); )
-    {
-        int startHeight = heights[i];
-        auto stop = FindNextTrapper(heights, i);
-        if (stop == heights.size())
-        {
-            ++i;
-            continue;
-        }
 
-        for (size_t j = i + 1; j != stop; ++j)
+    while (startHeight < heights.size())
+    {
+        startHeight = GetNextHighest(heights, endHeight);
+        if (startHeight == heights.size())
+            break;
+
+        size_t lowestHeight = GetNextLowest(heights, startHeight);
+        if (lowestHeight == heights.size())
+            break;
+
+        endHeight = GetNextHighest(heights, lowestHeight);
+        if (endHeight == heights.size())
+            break;
+
+        int trappingHeight = std::min(heights[startHeight], heights[endHeight]);
+        for (++startHeight; startHeight < endHeight; ++ startHeight)
         {
-            volume += (startHeight - heights[j]);
+            if (trappingHeight > heights[startHeight])
+                volume += trappingHeight - heights[startHeight];
         }
-        i = stop;
     }
 
     return volume;
@@ -41,6 +69,19 @@ int VolumeOfTrappedRainWater(const std::vector<int>& heights)
 
 int main()
 {
-    std::vector<int> vec{ 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1 };
-    std::cout << "The trapped rain volume is: " << VolumeOfTrappedRainWater(vec);
+    while (true)
+    {
+        int count = 0;
+        std::cout << "Number of elements in the array: ";
+        std::cin >> count;
+        if (count == 0)
+            break;
+
+        std::vector<int> vec(count);
+        std::cout << "The numbers of the sorted array: ";
+        for (int i = 0; i < count; ++i)
+            std::cin >> vec[i];
+
+        std::cout << "The trapped rain volume is: " << VolumeOfTrappedRainWater(vec) << std::endl << std::endl;
+    }
 }
