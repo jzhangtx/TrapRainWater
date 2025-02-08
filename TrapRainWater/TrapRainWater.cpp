@@ -7,33 +7,44 @@
 size_t GetNextHighest(const std::vector<int>& heights, size_t begin)
 {
     int height = heights[begin++];
-    bool hasOne = false;
-    while (begin != heights.size() && height < heights[begin])
+    while (begin != heights.size())
     {
-        hasOne = true;
-        height = heights[begin++];
+        if (heights[begin] < heights[begin - 1])
+            return begin - 1;
     }
-
-    if (!hasOne && begin == heights.size())
-        return begin;
 
     return begin - 1;
 }
 
-size_t GetNextLowest(const std::vector<int>& heights, size_t begin)
+bool NoHigherLeft(const std::vector<int>& heights, size_t begin)
 {
-    int height = heights[begin++];
-    bool hasOne = false;
-    while (begin != heights.size() && height >= heights[begin])
+    for (auto i = begin + 1; i < heights.size(); ++i)
+        if (heights[i] > heights[begin])
+            return false;
+    return true;
+}
+
+size_t GetNextTrap(const std::vector<int>& heights, size_t begin)
+{
+    int highest = heights[begin];
+    int lowest = heights[begin];
+
+    while (++begin != heights.size())
     {
-        hasOne = true;
-        height = heights[begin++];
+        if (heights[begin] >= highest)
+            return begin;
+
+        if (heights[begin] > heights[begin - 1])
+        {
+            if (NoHigherLeft(heights, begin))
+                return begin;
+        }
+
+        if (heights[begin] < lowest)
+            lowest = heights[begin];
     }
 
-    if (!hasOne && begin == heights.size())
-        return begin;
-
-    return begin - 1;
+    return -1;
 }
 
 int VolumeOfTrappedRainWater(const std::vector<int>& heights)
@@ -45,21 +56,20 @@ int VolumeOfTrappedRainWater(const std::vector<int>& heights)
     while (startHeight < heights.size())
     {
         startHeight = GetNextHighest(heights, endHeight);
-        if (startHeight == heights.size())
+        if (startHeight == heights.size()-1)
             break;
 
-        size_t lowestHeight = GetNextLowest(heights, startHeight);
-        if (lowestHeight == heights.size())
-            break;
-
-        endHeight = GetNextHighest(heights, lowestHeight);
-        if (endHeight == heights.size())
-            break;
+        endHeight = GetNextTrap(heights, startHeight);
+        if (endHeight == -1)
+        {
+            endHeight = startHeight + 1;
+            continue;
+        }
 
         int trappingHeight = std::min(heights[startHeight], heights[endHeight]);
-        for (++startHeight; startHeight < endHeight; ++ startHeight)
+        for (++startHeight; startHeight < endHeight; ++startHeight)
         {
-            if (trappingHeight > heights[startHeight])
+            if (heights[startHeight] < trappingHeight)
                 volume += trappingHeight - heights[startHeight];
         }
     }
